@@ -1,4 +1,5 @@
 {
     "movement": true,
-    "high jump" : false
+    "high_jump": false,
+    "rage": false
 }

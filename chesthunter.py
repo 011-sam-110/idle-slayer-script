@@ -83,13 +83,12 @@ def ChestHunt():
         checkAlive = findCloseButton()
         if checkAlive != None:
             closeChestHunt()
-            print("closing chesthunts")                                                                      r                                                         r                                               r                                                  
+            print("closing chesthunts")
             updateMovement(True)
         trialReturnedValueFix = trialclose()
         if trialReturnedValueFix != None:
             x,y = trialReturnedValueFix
             clickChest(x,y)
-        
         #elif returnedValue == None:
             #print("Failed chesthunt check")
 

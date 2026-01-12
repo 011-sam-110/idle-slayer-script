@@ -8,12 +8,20 @@ SPACE_DURATION = 1      # seconds
 WAIT_AFTER_SPACE = 0.5  # seconds
 SPACE_INTERVAL = .8 / SPACE_PRESSES_PER_SECOND
 
+high_jump = None
+rage = None
+
+
 def get_movement_value():
+    global high_jump, rage
     """Reads movement value from config.json"""
     try:
         with open("config.json", "r") as file:
             data = json.load(file)
+            high_jump = data.get("high_jump", False) #false as a preset
+            rage = data.get("rage", False)
             return data.get("movement", False)
+            
     except Exception:
         return False
 
@@ -36,12 +44,13 @@ def movementRun():
 
         # Wait a bit before next spam burst
         time.sleep(WAIT_AFTER_SPACE)
-
-        pyautogui.keyDown("space")
-        time.sleep(0.5)
-        pyautogui.keyUp("Space") 
-        time.sleep(.1)
-        keyboard.press_and_release("r")
+        if high_jump:
+            pyautogui.keyDown("space")
+            time.sleep(0.5)
+            pyautogui.keyUp("Space") 
+            time.sleep(.1)
+        if rage:
+            keyboard.press_and_release("r")
 
 if __name__ == "__main__":
     run() 
