@@ -8,7 +8,6 @@ import threading
 import pyautogui
 from src.replayscript import replay
 from src.movement import movementRun
-from src.trialtempfix import trialclose
 from src.clockTrial import clockTrial
 from src.saverChest import findSaverChest
 from src.gameOver import findCloseButton
@@ -52,11 +51,12 @@ def update_movement(value):
     :param value: boolean
     """
 
-    # Load the JSON file
+#   Load the JSON file
     with open("config.json", "r", encoding="utf-8") as f:
         config = json.load(f)
 
-    config["movement"] = value                               # Update the value
+#   Update the value
+    config["movement"] = value                               
 
     # Write back to the file
     with open("config.json", "w", encoding="utf-8") as f:
@@ -86,16 +86,18 @@ def run():
         returned_value = clockChestHunt()
         if returned_value is not None:
             logger.info("Triggered chest hunt")
-            update_movement(False)                            #stop movement
-            time.sleep(2)                                     #give time for saver to be found
+#           stop movement
+            update_movement(False)
+#           give time for saver to be found
+            time.sleep(2)                                     
 
             for i in range(30):
                 chest_hunt_check_alive = findCloseButton()
-                if chest_hunt_check_alive is not None:        #checks for slayer after each opened chest
+#               chest hunt check #1 | runs after each chest is opened
+                if chest_hunt_check_alive is not None:
                     close_chest_hunt()
                     logger.info("Triggered chest hunt close")
                     update_movement(True)
-                    
                 if i == 1:
                     coords = findSaverChest()
                     x, y = coords[0], coords[1]
@@ -104,30 +106,24 @@ def run():
                 x, y = chestPositions[i]
                 click_pos(x, y)
 
+
+#       trial check #3
         trial_check_alive = clockTrial()
         if trial_check_alive is not None:
             update_movement(False)
-            print("found trial")
+            logger.info("Triggered trial")
             start_trial()
         elif trial_check_alive is None:
             update_movement(True)
 
+#       chest hunt check #2
         chest_hunt_check_alive = findCloseButton()
         if chest_hunt_check_alive is not None:
             close_chest_hunt()
-            print("closing chesthunts")
+            logger.info("Triggered chest hunt close")
             update_movement(True)
-        trialReturnedValueFix = trialclose()
 
-        if trialReturnedValueFix is not None:
-            x, y = trialReturnedValueFix
-            click_pos(x, y)
-        #elif returnedValue == None:
-            #print("Failed chesthunt check")
 
-            
-                                          
-    
 time.sleep(1)
 threading.Thread(target=movementRun).start()
 run()
