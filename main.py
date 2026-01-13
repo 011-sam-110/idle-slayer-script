@@ -78,18 +78,16 @@ def run():
     """                    
     Docstring for run
     """
-
+                         
     can_run = True
 
     while can_run:
         time.sleep(5)
         returned_value = clockChestHunt()
-        if returned_value is not None:
+        if returned_value is not None:                                
             logger.info("Triggered chest hunt")
 #           stop movement
-            update_movement(False)
-#           give time for saver to be found
-            time.sleep(2)                                     
+            update_movement(False)r      
 
             for i in range(30):
                 chest_hunt_check_alive = findCloseButton()
