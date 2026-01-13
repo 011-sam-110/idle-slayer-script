@@ -12,16 +12,11 @@ from src.clockTrial import clockTrial
 from src.saverChest import findSaverChest
 from src.gameOver import findCloseButton
 from src.clockChestHunt import clockChestHunt
+from src.chestIdentification import getChestCoordinates
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 pyautogui.FAILSAFE = False
-chestPositions = [(392, 650), (571, 653), (791, 666), (1086, 691), (1277, 683),
-    (1552, 699), (1789, 692), (2053, 703), (2239, 712), (2486, 722),
-    (2460, 913), (2244, 905), (2035, 922), (1792, 903), (1550, 884),
-    (1297, 909), (1012, 917), (811, 900), (589, 926), (424, 922), (374, 1167),
-    (549, 1143), (846, 1119), (1024, 1129), (1286, 1144), (1498, 1164), (1739, 1156),
-    (1989, 1122), (2236, 1160), (2463, 1152)]
-
 
 def click_pos(x, y):
     """
@@ -83,18 +78,19 @@ def run():
 
     while can_run:
         time.sleep(5)
-        returned_value = clockChestHunt()
+        returned_value = clockChestHunt()            
         if returned_value is not None:                                
-            logger.info("Triggered chest hunt")
+            logger.info(" Triggered chest hunt") 
+            chestPositions = getChestCoordinates()
+            print(chestPositions)
 #           stop movement
-            update_movement(False)r      
-
+            update_movement(False) 
             for i in range(30):
                 chest_hunt_check_alive = findCloseButton()
 #               chest hunt check #1 | runs after each chest is opened
                 if chest_hunt_check_alive is not None:
                     close_chest_hunt()
-                    logger.info("Triggered chest hunt close")
+                    logger.info(" Triggered chest hunt close")
                     update_movement(True)
                 if i == 1:
                     coords = findSaverChest()
@@ -109,7 +105,7 @@ def run():
         trial_check_alive = clockTrial()
         if trial_check_alive is not None:
             update_movement(False)
-            logger.info("Triggered trial")
+            logger.info(" Triggered trial")
             start_trial()
         elif trial_check_alive is None:
             update_movement(True)
