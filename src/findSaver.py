@@ -1,28 +1,19 @@
 import cv2 as cv
 import pyautogui
-import numpy as np
 
-#    WMIN = 168
-#    WMAX = 183
-#    HMIN = 90
-#    HMAX = 170
-#    SCALE = 0.5
-#    DEV = True
+def getSaverCoordinates():
 
-def getChestCoordinates():
     #Config
-    WMIN = 168
-    WMAX = 183
-    HMIN = 138
-    HMAX = 170
+    WMIN = 190
+    WMAX = 200
+    HMIN = 190
+    HMAX = 200
     SCALE = 0.5
-    DEV = False
+    DEV = True
 
-
-    # Take in screenshot
     screenshot = pyautogui.screenshot()
-    screenshot.save("Chest_screen.png")
-    img = cv.imread("Chest_screen.png", cv.IMREAD_GRAYSCALE)
+    screenshot.save("SaverChest.png")
+    img = cv.imread("SaverChest.png", cv.IMREAD_GRAYSCALE)
 
     # Apply blur
     img = cv.medianBlur(img,5)
@@ -30,19 +21,17 @@ def getChestCoordinates():
     # Thresholding
     th2 = cv.adaptiveThreshold(img, 255, cv.ADAPTIVE_THRESH_MEAN_C,\
                 cv.THRESH_BINARY, 11, 2)
-
     ret, thresh = cv.threshold(th2, 127, 255, 0)
 
     # Find all Contours
     contours, hierarchy = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
-
-    # Convert to BGR
     th2 = cv.cvtColor(th2, cv.COLOR_GRAY2BGR)
 
-    # Filter contours down to 29
+    # Filter contours down to match desired size
     filtered = []
     for cnt in contours:
         x, y, w, h = cv.boundingRect(cnt)
+        cv.rectangle(th2, (x, y), (x + w, y + h), (0, 0,255), 2)
     #     Width                 Height
         if WMIN <= w <= WMAX and HMIN <= h <= HMAX:
             filtered.append(cnt)
@@ -60,15 +49,11 @@ def getChestCoordinates():
         cnt = filtered[i]
         cv.drawContours(th2, [cnt], -1, (0,0,255), 3)
 
-    # Scaling
-    h, w = img.shape[:2]
-    img = cv.resize(img, (int(w*SCALE), int(h*SCALE)), interpolation=cv.INTER_AREA)
-
+   
+    #th2 = cv.cvtColor(img, cv.COLOR_GRAY2BGR)
     # Show image
-    if DEV:
-        cv.imshow(f'{len(finalcoords)} Chests found', th2)
-        cv.waitKey(0)
-        print(f"Chests found: {len(finalcoords)}")
 
-
-    return finalcoords
+    if len(finalcoords) == 1:
+        return 1, finalcoords
+    else:
+        return 0, None

@@ -1,123 +1,71 @@
-"""
-Docstring for chesthunter
-"""
 import json
-import time
-import logging
+import sys
 import threading
-import pyautogui
-from src.replayscript import replay
-from src.movement import movementRun
-from src.clockTrial import clockTrial
-from src.saverChest import findSaverChest
-from src.gameOver import findCloseButton
-from src.clockChestHunt import clockChestHunt
-from src.chestIdentification import getChestCoordinates
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-pyautogui.FAILSAFE = False
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QApplication, QLabel, QPushButton, QVBoxLayout,
+                             QWidget)
 
-def click_pos(x, y):
-    """
-    Docstring for click_pos | Clicks at the given coordinates
-
-    :param x: X screen coordinate
-    :param y: Y screen coordinate
-    """
-    pyautogui.moveTo(x, y, 0.6)
-    time.sleep(1)
-    pyautogui.click()
-    time.sleep(2)
+from src import ChestHuntCheck, movement
 
 
-def close_chest_hunt():
-    """
-    Docstring for close_chest_hunt
-    """
-    pyautogui.moveTo(1410, 1623, 0.6)
-    pyautogui.click()
+def UpdateConfigSetting(settings: list):
+    """Update a specific setting in the configuration file."""
+    with open("src/config.json") as file:
+        data = json.load(file)
+    data[settings[0]] = settings[1] 
+    with open("src/config.json", "w") as file:
+        json.dump(data, file, indent=4)
+
+def start():
+    threading.Thread(target=movement.movementCycle).start()
+    threading.Thread(target=ChestHuntCheck.ChestHuntCheck).start()
+    # chest hunt check
+    # trial check
 
 
-def update_movement(value):
-    """
-    Docstring for update_movement | Disables/Enables cycled movement (jumping/boosting)
+class StartStopGUI(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Start / Stop")
+        self.setFixedSize(300, 150)
 
-    :param value: boolean
-    """
+        self.running = False
 
-#   Load the JSON file
-    with open("config.json", "r", encoding="utf-8") as f:
-        config = json.load(f)
+        # UI elements
+        self.status_label = QLabel("Status: Stopped")
+        self.status_label.setAlignment(Qt.AlignCenter)
 
-#   Update the value
-    config["movement"] = value                               
+        self.start_button = QPushButton("Start")
+        self.stop_button = QPushButton("Stop")
 
-    # Write back to the file
-    with open("config.json", "w", encoding="utf-8") as f:
-        json.dump(config, f, indent=4)
+        # Connect signals
+        self.start_button.clicked.connect(self.start)
+        self.stop_button.clicked.connect(self.stop)
 
+        # Layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.status_label)
+        layout.addWidget(self.start_button)
+        layout.addWidget(self.stop_button)
+        self.setLayout(layout)
 
-def start_trial():
-    """
-    Docstring for start_trial | Starts trial
-    """
+    def start(self):
+        if not self.running:
+            self.running = True
+            self.status_label.setText("Status: Running")
+            UpdateConfigSetting(["paused", False])
 
-    pyautogui.moveTo(1829, 1341, 1)
-    pyautogui.dragTo(988, 1330, 0.5)
-    time.sleep(1)
-    replay()
-
-
-def run():
-    """                    
-    Docstring for run
-    """
-                         
-    can_run = True
-
-    while can_run:
-        time.sleep(5)
-        returned_value = clockChestHunt()            
-        if returned_value is not None:                                
-            logger.info(" Triggered chest hunt") 
-            chestPositions = getChestCoordinates()
-            print(chestPositions)
-#           stop movement
-            update_movement(False) 
-            for i in range(30):
-                chest_hunt_check_alive = findCloseButton()
-#               chest hunt check #1 | runs after each chest is opened
-                if chest_hunt_check_alive is not None:
-                    close_chest_hunt()
-                    logger.info(" Triggered chest hunt close")
-                    update_movement(True)
-                if i == 1:
-                    coords = findSaverChest()
-                    x, y = coords[0], coords[1]
-                    click_pos(x, y)
-
-                x, y = chestPositions[i]
-                click_pos(x, y)
+    def stop(self):
+        if self.running:
+            self.running = False
+            self.status_label.setText("Status: Stopped")
+            UpdateConfigSetting(["paused", True])
 
 
-#       trial check #3
-        trial_check_alive = clockTrial()
-        if trial_check_alive is not None:
-            update_movement(False)
-            logger.info(" Triggered trial")
-            start_trial()
-        elif trial_check_alive is None:
-            update_movement(True)
-
-#       chest hunt check #2
-        chest_hunt_check_alive = findCloseButton()
-        if chest_hunt_check_alive is not None:
-            close_chest_hunt()
-            logger.info("Triggered chest hunt close")
-            update_movement(True)
-
-
-time.sleep(1)
-threading.Thread(target=movementRun).start()
-run()
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = StartStopGUI()
+    window.show()
+    threading.Thread(target=start).start()
+    sys.exit(app.exec_())

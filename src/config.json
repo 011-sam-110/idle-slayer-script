@@ -1,0 +1,8 @@
+{
+    "paused": true,
+    "movement": true,
+    "high_jump": true,
+    "use_rage": true,
+    "cycle_portals": true,
+    "chest_hunt_click_delay": 3.5
+}

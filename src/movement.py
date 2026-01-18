@@ -1,56 +1,48 @@
-import keyboard
-import time
 import json
-import pyautogui
+from tracemalloc import start
+import pyautogui, keyboard
+import time
 
-SPACE_PRESSES_PER_SECOND = 50
+SPACE_PRESSES_PER_SECOND = 8
 SPACE_DURATION = 1      # seconds
 WAIT_AFTER_SPACE = 0.5  # seconds
-SPACE_INTERVAL = .8 / SPACE_PRESSES_PER_SECOND
+SPACE_INTERVAL = 1 / SPACE_PRESSES_PER_SECOND
 
-high_jump = None
-rage = None
+def getConfigSettings(settings : list):   
+    """"""
+    returnedSettings = []
+    with open("src/config.json") as file:
+        config = json.load(file)
+        for setting in settings:
+            returnedSettings.append(config[setting])
 
+    return returnedSettings
 
-def get_movement_value():
-    global high_jump, rage
-    """Reads movement value from config.json"""
-    try:
-        with open("config.json", "r") as file:
-            data = json.load(file)
-            high_jump = data.get("high_jump", False) #false as a preset
-            rage = data.get("rage", False)
-            return data.get("movement", False)
-            
-    except Exception:
-        return False
-
-def movementRun():
-    print("Press CTRL+C to stop.")
+def movementCycle():
+    """"""
     while True:
-        movementValue = get_movement_value()
-        if not movementValue:
-            # If movement is False, wait a short time and check again
-            time.sleep(0.2)
-            continue
+        time.sleep(1)
+        movement_enabled, paused, high_jump_enabled, rage_enabled = getConfigSettings(
+            ["movement", "paused", "high_jump", "use_rage"])
 
-        # Spam SPACE for SPACE_DURATION seconds
-        start_time = time.time()
-        while time.time() - start_time < SPACE_DURATION:
-            if not get_movement_value():
-                break  # stop immediately if movement is turned off
-            keyboard.press_and_release("space")
-            time.sleep(SPACE_INTERVAL)
+        while movement_enabled and paused == False:
+            time.sleep(.2)
+            while paused == False:
+                time.sleep(.2)
+                start_time = time.time()
+                print("movement cycle")
+                while time.time() - start_time < SPACE_DURATION:
+                    keyboard.press_and_release("space")
+                    time.sleep(SPACE_INTERVAL)
 
-        # Wait a bit before next spam burst
-        time.sleep(WAIT_AFTER_SPACE)
-        if high_jump:
-            pyautogui.keyDown("space")
-            time.sleep(0.5)
-            pyautogui.keyUp("Space") 
-            time.sleep(.1)
-        if rage:
-            keyboard.press_and_release("r")
+                if high_jump_enabled:
+                    time.sleep(0.2)
+                    pyautogui.keyDown("space")
+                    time.sleep(0.3)
+                    pyautogui.keyUp("space")
 
-if __name__ == "__main__":
-    run() 
+                if rage_enabled:
+                    keyboard.press_and_release("r")
+
+#               Check if paused
+                paused, movement_enabled = getConfigSettings(["paused", "movement"])

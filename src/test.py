@@ -1,6 +1,6 @@
-from chestIdentification import getChestCoordinates
+import cv2
+import pytesseract
 
-coords = getChestCoordinates()
-
-x,y = coords[1]
-print(x,y)
+img = cv2.imread("SaverChest.png")
+text = pytesseract.image_to_string(img)
+print(text)
